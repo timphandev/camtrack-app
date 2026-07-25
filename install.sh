@@ -5,9 +5,9 @@
 #   curl -sfL https://raw.githubusercontent.com/timphandev/camtrack-app/main/install.sh | sudo sh
 #
 # By default installs the latest stable release (a tag with no semver pre-release suffix, e.g.
-# v0.5.0). Flags:
+# app@0.5.0). Flags:
 #
-#   --pre              also consider pre-release versions (e.g. v0.6.0-beta.1) when picking latest
+#   --pre              also consider pre-release versions (e.g. app@0.6.0-beta.1) when picking latest
 #   --version X.Y.Z    install this exact version instead of latest (accepts the pre-release
 #                       suffix form too, e.g. --version 0.6.0-beta.1)
 #   --force            allow installing a version older than (or equal to, if undetectable) the
@@ -45,7 +45,7 @@ done
 version_re='^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?$'
 if [ -n "$want_version" ]; then
     case "$want_version" in
-        v*) want_version=${want_version#v} ;;
+        app@*) want_version=${want_version#app@} ;;
     esac
     if ! echo "$want_version" | grep -qE "$version_re"; then
         echo "invalid --version: $want_version (expected X.Y.Z or X.Y.Z-suffix)" >&2
@@ -141,7 +141,7 @@ fi
 
 if [ -n "$want_version" ]; then
     target_version="$want_version"
-    tag="v${target_version}"
+    tag="app@${target_version}"
     release_url="https://api.github.com/repos/${REPO}/releases/tags/${tag}"
     release_json=$(curl -sfL "$release_url") || {
         echo "release ${tag} not found in ${REPO}" >&2
@@ -159,7 +159,10 @@ else
 
     target_version=""
     for tag in $all_tags; do
-        v=${tag#v}
+        case "$tag" in
+            app@*) v=${tag#app@} ;;
+            *) continue ;;
+        esac
         if [ "$want_pre" -eq 0 ] && semver_is_pre "$v"; then
             continue
         fi
@@ -173,7 +176,7 @@ else
         exit 1
     fi
 
-    tag="v${target_version}"
+    tag="app@${target_version}"
     release_url="https://api.github.com/repos/${REPO}/releases/tags/${tag}"
     release_json=$(curl -sfL "$release_url")
 fi
